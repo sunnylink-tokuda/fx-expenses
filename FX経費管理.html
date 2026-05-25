@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FX経費管理</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F6F3;color:#1a1a1a;font-size:15px}
+.header{background:#1a1a1a;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.header h1{font-size:16px;font-weight:500;letter-spacing:0.02em}
+.tabs{display:flex;gap:2px;background:#fff;border-bottom:1px solid #e8e6e0;padding:0 16px}
+.tab{padding:12px 18px;font-size:14px;cursor:pointer;border:none;background:transparent;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
+.content{padding:20px;max-width:760px;margin:0 auto}
+.section-title{font-size:14px;font-weight:500;color:#1a1a1a;margin-bottom:12px}
+.card{background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:16px 20px;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.metric{background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:14px;text-align:center}
+.metric-label{font-size:11px;color:#888;margin-bottom:6px;letter-spacing:0.04em}
+.metric-value{font-size:22px;font-weight:500;color:#1a1a1a}
+.metric-value.green{color:#0F6E56}
+label{font-size:12px;color:#888;display:block;margin-bottom:4px;letter-spacing:0.03em}
+input,select,textarea{width:100%;font-size:14px;padding:9px 12px;border:1px solid #e0ded8;border-radius:8px;background:#fff;color:#1a1a1a;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:#1a1a1a}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+.field{margin-bottom:10px}
+button.primary{background:#1a1a1a;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500;font-family:inherit}
+button.primary:hover{background:#333}
+button.secondary{background:transparent;border:1px solid #e0ded8;color:#1a1a1a;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
+button.secondary:hover{background:#f7f6f3}
+button.danger{background:transparent;border:none;color:#A32D2D;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px}
+button.danger:hover{background:#fcebeb}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:#888;padding:8px 10px;border-bottom:1px solid #e8e6e0;white-space:nowrap;font-size:12px}
+td{padding:9px 10px;border-bottom:1px solid #f0eeea;color:#1a1a1a}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
+.badge-teal{background:#E1F5EE;color:#0F6E56}
+.badge-blue{background:#E6F1FB;color:#185FA5}
+.badge-amber{background:#FAEEDA;color:#854F0B}
+.badge-gray{background:#F1EFE8;color:#5F5E5A}
+.badge-coral{background:#FAECE7;color:#993C1D}
+.badge-purple{background:#EEEDFE;color:#3C3489}
+.hint{font-size:11px;color:#aaa;margin-top:4px}
+.divider{height:1px;background:#e8e6e0;margin:12px 0}
+.anbunsec{background:#f7f6f3;border-radius:8px;padding:14px;margin-bottom:12px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:14px;border-bottom:1px solid #f0eeea}
+.summary-row:last-child{border-bottom:none}
+.summary-row.total{font-weight:500;border-top:1px solid #e8e6e0;margin-top:6px;padding-top:10px;border-bottom:none}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:14px}
+.anbun-preview{font-size:12px;color:#0F6E56;background:#E1F5EE;padding:8px 12px;border-radius:8px;margin-bottom:12px;display:none}
+.note{font-size:11px;color:#aaa;margin-top:8px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="header">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+  <h1>FX 経費管理</h1>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('dashboard')">ダッシュボード</button>
+  <button class="tab" onclick="showTab('entry')">経費入力</button>
+  <button class="tab" onclick="showTab('anbun')">按分設定</button>
+  <button class="tab" onclick="showTab('list')">一覧・集計</button>
+</div>
+
+<div class="content">
+<div id="tab-dashboard">
+  <div class="grid3">
+    <div class="metric"><div class="metric-label">経費合計（今年度）</div><div class="metric-value" id="total-all">¥0</div></div>
+    <div class="metric"><div class="metric-label">按分後 経費合計</div><div class="metric-value green" id="total-anbun">¥0</div></div>
+    <div class="metric"><div class="metric-label">件数</div><div class="metric-value" id="total-count">0件</div></div>
+  </div>
+  <p class="section-title">カテゴリ別 合計</p>
+  <div class="card" id="cat-summary"><p class="empty">まだ経費がありません</p></div>
+  <p class="section-title" style="margin-top:16px">最近の経費</p>
+  <div class="card" id="recent-list"><p class="empty">まだ経費がありません</p></div>
+</div>
+
+<div id="tab-entry" style="display:none">
+  <p class="section-title">経費を追加</p>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>日付</label><input type="date" id="e-date"></div>
+      <div class="field"><label>カテゴリ</label>
+        <select id="e-cat" onchange="updateAnbunPreview()">
+          <option value="spread">スプレッド・手数料</option>
+          <option value="info">情報サービス・ツール代</option>
+          <option value="book">書籍・教材費</option>
+          <option value="comm">通信費・PC代</option>
+          <option value="seminar">セミナー・勉強会費</option>
+          <option value="rent">家賃（按分）</option>
+          <option value="util">通信費（按分）</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>内容・メモ</label><input type="text" id="e-memo" placeholder="例：MT4サブスク、チャートツール代..."></div>
+    <div class="row">
+      <div class="field"><label>金額（円）</label><input type="number" id="e-amount" placeholder="0" min="0" oninput="updateAnbunPreview()"></div>
+      <div class="field"><label>支払方法</label>
+        <select id="e-pay">
+          <option value="card">クレジットカード</option>
+          <option value="bank">銀行振込</option>
+          <option value="cash">現金</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>領収書番号（任意）</label><input type="text" id="e-receipt" placeholder="例：R-2026-001"></div>
+    <div class="anbun-preview" id="anbun-preview"></div>
+    <button class="primary" onclick="addExpense()">＋ 追加する</button>
+  </div>
+</div>
+
+<div id="tab-anbun" style="display:none">
+  <p class="section-title">按分設定</p>
+  <div class="anbunsec">
+    <p style="font-size:13px;color:#666;margin-bottom:14px">家賃・通信費などを仕事用とプライベートに分ける割合を設定してください。経費計上できるのは「仕事用割合」分のみです。</p>
+    <div class="row">
+      <div class="field"><label>家賃 — 仕事使用割合</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <input type="range" min="0" max="100" step="5" id="rent-rate" style="flex:1;padding:0" oninput="updateAnbun()">
+          <span style="min-width:38px;font-size:15px;font-weight:500" id="rent-rate-out">30%</span>
+        </div>
+        <div class="hint">仕事部屋の床面積 ÷ 部屋全体の床面積 が目安</div>
+      </div>
+      <div class="field"><label>通信費 — 仕事使用割合</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <input type="range" min="0" max="100" step="5" id="comm-rate" style="flex:1;padding:0" oninput="updateAnbun()">
+          <span style="min-width:38px;font-size:15px;font-weight:500" id="comm-rate-out">50%</span>
+        </div>
+        <div class="hint">実際の使用比率が根拠になります</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="anbun-summary-card"></div>
+  <p class="note">※ 按分割合は税務調査時に合理的な根拠が必要です。実態に即した数値を設定してください。</p>
+</div>
+
+<div id="tab-list" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <p class="section-title" style="margin:0">経費一覧</p>
+    <div style="display:flex;gap:8px">
+      <select id="filter-cat" style="width:auto;font-size:13px;padding:7px 12px" onchange="renderList()">
+        <option value="">すべてのカテゴリ</option>
+        <option value="spread">スプレッド・手数料</option>
+        <option value="info">情報サービス・ツール代</option>
+        <option value="book">書籍・教材費</option>
+        <option value="comm">通信費・PC代</option>
+        <option value="seminar">セミナー・勉強会費</option>
+        <option value="rent">家賃（按分）</option>
+        <option value="util">通信費（按分）</option>
+        <option value="other">その他</option>
+      </select>
+      <button class="secondary" onclick="exportCSV()">↓ CSV出力</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>日付</th><th>カテゴリ</th><th>内容</th><th>金額</th><th>按分後</th><th>支払</th><th></th></tr></thead>
+        <tbody id="expense-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px" id="list-totals"></div>
+</div>
+</div>
+
+<script>
+const CATS={spread:{label:'スプレッド・手数料',badge:'badge-teal',anbun:false},info:{label:'情報サービス・ツール代',badge:'badge-blue',anbun:false},book:{label:'書籍・教材費',badge:'badge-amber',anbun:false},comm:{label:'通信費・PC代',badge:'badge-gray',anbun:false},seminar:{label:'セミナー・勉強会費',badge:'badge-purple',anbun:false},rent:{label:'家賃（按分）',badge:'badge-coral',anbun:'rent'},util:{label:'通信費（按分）',badge:'badge-coral',anbun:'comm'},other:{label:'その他',badge:'badge-gray',anbun:false}};
+const PAYS={card:'カード',bank:'銀行振込',cash:'現金',other:'その他'};
+let expenses=JSON.parse(localStorage.getItem('fx_expenses')||'[]');
+let rentRate=parseInt(localStorage.getItem('fx_rent_rate')||'30');
+let commRate=parseInt(localStorage.getItem('fx_comm_rate')||'50');
+function save(){localStorage.setItem('fx_expenses',JSON.stringify(expenses));localStorage.setItem('fx_rent_rate',rentRate);localStorage.setItem('fx_comm_rate',commRate)}
+function getAnbunRate(cat){if(cat==='rent')return rentRate/100;if(cat==='util')return commRate/100;return 1}
+function getAnbunAmount(exp){return Math.round(exp.amount*getAnbunRate(exp.cat))}
+function fmt(n){return '¥'+Math.round(n).toLocaleString('ja-JP')}
+function showTab(t){['dashboard','entry','anbun','list'].forEach(id=>{document.getElementById('tab-'+id).style.display=id===t?'':'none'});document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',['dashboard','entry','anbun','list'][i]===t)});if(t==='dashboard')renderDashboard();if(t==='list')renderList();if(t==='anbun')renderAnbunSummary()}
+function setTodayDate(){const d=document.getElementById('e-date');if(!d.value){const n=new Date;d.value=n.toISOString().slice(0,10)}}
+function updateAnbunPreview(){const cat=document.getElementById('e-cat').value;const amt=parseInt(document.getElementById('e-amount').value)||0;const el=document.getElementById('anbun-preview');if(CATS[cat].anbun&&amt>0){const r=getAnbunRate(cat);el.textContent='按分計算: '+fmt(amt)+' × '+Math.round(r*100)+'% = '+fmt(amt*r)+' が経費計上額';el.style.display='block'}else{el.textContent='';el.style.display='none'}}
+function addExpense(){const date=document.getElementById('e-date').value;const cat=document.getElementById('e-cat').value;const memo=document.getElementById('e-memo').value.trim();const amount=parseInt(document.getElementById('e-amount').value)||0;const pay=document.getElementById('e-pay').value;const receipt=document.getElementById('e-receipt').value.trim();if(!date||!memo||amount<=0){alert('日付・内容・金額を入力してください');return}expenses.push({id:Date.now(),date,cat,memo,amount,pay,receipt});expenses.sort((a,b)=>b.date.localeCompare(a.date));save();document.getElementById('e-memo').value='';document.getElementById('e-amount').value='';document.getElementById('e-receipt').value='';document.getElementById('anbun-preview').style.display='none';showTab('dashboard')}
+function deleteExpense(id){if(!confirm('この経費を削除しますか？'))return;expenses=expenses.filter(e=>e.id!==id);save();renderList()}
+function renderDashboard(){const total=expenses.reduce((s,e)=>s+e.amount,0);const totalAnbun=expenses.reduce((s,e)=>s+getAnbunAmount(e),0);document.getElementById('total-all').textContent=fmt(total);document.getElementById('total-anbun').textContent=fmt(totalAnbun);document.getElementById('total-count').textContent=expenses.length+'件';const catMap={};expenses.forEach(e=>{if(!catMap[e.cat])catMap[e.cat]={total:0,anbun:0,count:0};catMap[e.cat].total+=e.amount;catMap[e.cat].anbun+=getAnbunAmount(e);catMap[e.cat].count++});const cs=document.getElementById('cat-summary');if(Object.keys(catMap).length===0){cs.innerHTML='<p class="empty">まだ経費がありません</p>';return}cs.innerHTML=Object.entries(catMap).map(([k,v])=>`<div class="summary-row"><div style="display:flex;align-items:center;gap:8px"><span class="badge ${CATS[k].badge}">${CATS[k].label}</span><span style="font-size:12px;color:#aaa">${v.count}件</span></div><div style="text-align:right"><span style="font-size:14px">${fmt(v.total)}</span>${CATS[k].anbun?`<span style="font-size:12px;color:#aaa;margin-left:6px">→ 按分後 ${fmt(v.anbun)}</span>`:''}</div></div>`).join('')+`<div class="summary-row total"><span>合計（按分後）</span><span>${fmt(totalAnbun)}</span></div>`;const recent=expenses.slice(0,5);const rl=document.getElementById('recent-list');if(recent.length===0){rl.innerHTML='<p class="empty">まだ経費がありません</p>';return}rl.innerHTML=recent.map(e=>`<div class="summary-row"><div><span style="font-size:12px;color:#aaa;margin-right:8px">${e.date}</span><span class="badge ${CATS[e.cat].badge}">${CATS[e.cat].label}</span><span style="font-size:14px;margin-left:8px">${e.memo}</span></div><span style="font-size:14px;font-weight:500">${fmt(e.amount)}</span></div>`).join('')}
+function renderList(){const filter=document.getElementById('filter-cat').value;const filtered=filter?expenses.filter(e=>e.cat===filter):expenses;const tbody=document.getElementById('expense-tbody');if(filtered.length===0){tbody.innerHTML='<tr><td colspan="7" class="empty">データがありません</td></tr>';document.getElementById('list-totals').innerHTML='';return}tbody.innerHTML=filtered.map(e=>`<tr><td style="white-space:nowrap">${e.date}</td><td><span class="badge ${CATS[e.cat].badge}">${CATS[e.cat].label}</span></td><td>${e.memo}${e.receipt?`<span style="font-size:11px;color:#aaa;margin-left:6px">${e.receipt}</span>`:''}</td><td style="text-align:right">${fmt(e.amount)}</td><td style="text-align:right">${CATS[e.cat].anbun?`<span style="color:#0F6E56">${fmt(getAnbunAmount(e))}</span>`:fmt(e.amount)}</td><td>${PAYS[e.pay]||e.pay}</td><td><button class="danger" onclick="deleteExpense(${e.id})">削除</button></td></tr>`).join('');const total=filtered.reduce((s,e)=>s+e.amount,0);const anbun=filtered.reduce((s,e)=>s+getAnbunAmount(e),0);document.getElementById('list-totals').innerHTML=`<div class="summary-row"><span>件数</span><span>${filtered.length}件</span></div><div class="summary-row"><span>経費合計（按分前）</span><span>${fmt(total)}</span></div><div class="summary-row total"><span>経費合計（按分後・申告用）</span><span style="color:#0F6E56">${fmt(anbun)}</span></div>`}
+function updateAnbun(){rentRate=parseInt(document.getElementById('rent-rate').value);commRate=parseInt(document.getElementById('comm-rate').value);document.getElementById('rent-rate-out').textContent=rentRate+'%';document.getElementById('comm-rate-out').textContent=commRate+'%';save();renderAnbunSummary()}
+function renderAnbunSummary(){document.getElementById('rent-rate').value=rentRate;document.getElementById('comm-rate').value=commRate;document.getElementById('rent-rate-out').textContent=rentRate+'%';document.getElementById('comm-rate-out').textContent=commRate+'%';const rentTotal=expenses.filter(e=>e.cat==='rent').reduce((s,e)=>s+e.amount,0);const utilTotal=expenses.filter(e=>e.cat==='util').reduce((s,e)=>s+e.amount,0);document.getElementById('anbun-summary-card').innerHTML=`<p class="section-title" style="margin-bottom:12px">按分後の経費計上額（現在）</p><div class="summary-row"><span>家賃合計</span><span>${fmt(rentTotal)}</span></div><div class="summary-row"><span>家賃 × ${rentRate}%（仕事分）</span><span style="color:#0F6E56">${fmt(rentTotal*rentRate/100)}</span></div><div class="divider" style="margin:8px 0"></div><div class="summary-row"><span>通信費合計</span><span>${fmt(utilTotal)}</span></div><div class="summary-row"><span>通信費 × ${commRate}%（仕事分）</span><span style="color:#0F6E56">${fmt(utilTotal*commRate/100)}</span></div>`}
+function exportCSV(){const header='日付,カテゴリ,内容,金額,按分後金額,支払方法,領収書番号';const rows=expenses.map(e=>[e.date,CATS[e.cat].label,'"'+e.memo+'"',e.amount,getAnbunAmount(e),PAYS[e.pay]||e.pay,e.receipt||''].join(','));const csv='\uFEFF'+header+'\n'+rows.join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='FX経費_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url)}
+setTodayDate();renderDashboard();
+</script>
+</body>
+</html>
