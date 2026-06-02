@@ -23,7 +23,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .metric-value{font-size:20px;font-weight:500;color:#1a1a1a}
 .metric-value.green{color:#0F6E56}
 .metric-value.red{color:#A32D2D}
-.metric-value.blue{color:#185FA5}
 label{font-size:12px;color:#888;display:block;margin-bottom:4px;letter-spacing:0.03em}
 input,select{width:100%;font-size:14px;padding:9px 12px;border:1px solid #e0ded8;border-radius:8px;background:#fff;color:#1a1a1a;font-family:inherit}
 input:focus,select:focus{outline:none;border-color:#1a1a1a}
@@ -34,12 +33,14 @@ button.primary{background:#1a1a1a;color:#fff;border:none;padding:10px 22px;borde
 button.primary:hover{background:#333}
 button.secondary{background:transparent;border:1px solid #e0ded8;color:#1a1a1a;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
 button.secondary:hover{background:#f7f6f3}
-button.danger{background:transparent;border:none;color:#A32D2D;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px}
+button.danger{background:transparent;border:none;color:#A32D2D;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:inherit}
 button.danger:hover{background:#fcebeb}
+button.edit-btn{background:transparent;border:1px solid #e0ded8;color:#555;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:inherit}
+button.edit-btn:hover{background:#f7f6f3}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;font-weight:500;color:#888;padding:8px 10px;border-bottom:1px solid #e8e6e0;white-space:nowrap;font-size:12px}
-td{padding:9px 10px;border-bottom:1px solid #f0eeea;color:#1a1a1a}
+td{padding:9px 10px;border-bottom:1px solid #f0eeea;color:#1a1a1a;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 .badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
 .badge-teal{background:#E1F5EE;color:#0F6E56}
@@ -74,18 +75,23 @@ tr:last-child td{border-bottom:none}
 .month-cell.negative{border-color:#F5C4B3}
 .year-selector{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .year-selector button{background:transparent;border:1px solid #e0ded8;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:14px;font-family:inherit}
-.year-selector button:hover{background:#f7f6f3}
 .year-selector span{font-size:16px;font-weight:500;min-width:60px;text-align:center}
 .loading{text-align:center;padding:1.5rem;color:#aaa;font-size:14px}
-.loan-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0eeea;gap:8px}
-.loan-row:last-child{border-bottom:none}
-.loan-name{font-size:14px;font-weight:500}
-.loan-detail{font-size:12px;color:#888;margin-top:2px}
-.loan-amount{text-align:right;white-space:nowrap}
-.loan-amount .principal{font-size:15px;font-weight:500;color:#A32D2D}
-.loan-amount .repay{font-size:12px;color:#888;margin-top:2px}
+.loan-card{background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.loan-card.editing{border-color:#1a1a1a;background:#fafaf8}
+.loan-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.loan-name{font-size:15px;font-weight:500}
+.loan-actions{display:flex;gap:6px;flex-shrink:0}
+.loan-detail{font-size:13px;color:#666;line-height:1.7}
+.loan-amount-big{font-size:18px;font-weight:500;color:#A32D2D;margin-top:4px}
+.repay-date-badge{display:inline-block;background:#FAEEDA;color:#854F0B;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
 .dash-section{margin-bottom:20px}
-.dash-section-title{font-size:13px;font-weight:500;color:#888;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px}
+.dash-section-title{font-size:13px;font-weight:500;color:#888;letter-spacing:0.05em;margin-bottom:8px}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 </style>
 </head>
 <body>
@@ -107,7 +113,6 @@ tr:last-child td{border-bottom:none}
 
 <!-- ダッシュボード -->
 <div id="tab-dashboard">
-  <!-- 経費サマリ -->
   <div class="dash-section">
     <div class="dash-section-title">経費</div>
     <div class="grid3">
@@ -116,8 +121,6 @@ tr:last-child td{border-bottom:none}
       <div class="metric"><div class="metric-label">件数</div><div class="metric-value" id="total-count">0件</div></div>
     </div>
   </div>
-
-  <!-- FX損益・税額サマリ -->
   <div class="dash-section">
     <div class="dash-section-title">今年のFX損益・税額（<span id="dash-year"></span>年）</div>
     <div class="grid3">
@@ -126,23 +129,18 @@ tr:last-child td{border-bottom:none}
       <div class="metric"><div class="metric-label">税引後 手残り</div><div class="metric-value green" id="dash-after">—</div></div>
     </div>
   </div>
-
-  <!-- 借入サマリ -->
   <div class="dash-section">
     <div class="dash-section-title">借入</div>
     <div class="grid2">
       <div class="metric"><div class="metric-label">借入総額</div><div class="metric-value red" id="dash-loan-total">¥0</div></div>
       <div class="metric"><div class="metric-label">月間返済合計</div><div class="metric-value" id="dash-loan-monthly">¥0</div></div>
     </div>
-    <div class="card" id="dash-loan-list"><p class="empty">借入なし</p></div>
+    <div id="dash-loan-list"><p class="empty">借入なし</p></div>
   </div>
-
-  <!-- カテゴリ別 -->
   <div class="dash-section">
     <div class="dash-section-title">カテゴリ別 経費</div>
     <div class="card" id="cat-summary"><p class="loading">読み込み中...</p></div>
   </div>
-
   <div class="dash-section">
     <div class="dash-section-title">最近の経費</div>
     <div class="card" id="recent-list"><p class="loading">読み込み中...</p></div>
@@ -268,42 +266,70 @@ tr:last-child td{border-bottom:none}
       <div class="field"><label>会社名・借入先</label><input type="text" id="l-name" placeholder="例：〇〇銀行、消費者金融A"></div>
       <div class="field"><label>借入額（円）</label><input type="number" id="l-amount" placeholder="0" min="0"></div>
     </div>
-    <div class="row">
-      <div class="field"><label>返済日（毎月）</label>
+    <div class="row3">
+      <div class="field"><label>毎月の返済日</label>
         <select id="l-day">
-          <option value="">選択してください</option>
+          <option value="">選択</option>
           ${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}日</option>`).join('')}
           <option value="end">月末</option>
         </select>
       </div>
       <div class="field"><label>月々の返済額（円）</label><input type="number" id="l-repay" placeholder="0" min="0"></div>
+      <div class="field"><label>次回返済日</label><input type="date" id="l-next-date"></div>
     </div>
     <div class="field"><label>メモ（任意）</label><input type="text" id="l-memo" placeholder="例：金利2.5%、2028年完済予定"></div>
     <button class="primary" onclick="addLoan()">＋ 追加する</button>
   </div>
 
   <p class="section-title">借入一覧</p>
-  <div class="card" id="loan-list"><p class="loading">読み込み中...</p></div>
-  <div class="card" id="loan-totals"></div>
+  <div id="loan-list"><p class="loading">読み込み中...</p></div>
+  <div class="card" id="loan-totals" style="display:none"></div>
 </div>
 
+</div>
+
+<!-- 編集モーダル（借入） -->
+<div class="modal-overlay" id="loan-modal">
+  <div class="modal">
+    <div class="modal-title">借入を編集</div>
+    <input type="hidden" id="m-id">
+    <div class="row">
+      <div class="field"><label>会社名・借入先</label><input type="text" id="m-name"></div>
+      <div class="field"><label>借入額（円）</label><input type="number" id="m-amount" min="0"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>毎月の返済日</label>
+        <select id="m-day">
+          <option value="">選択</option>
+          ${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}日</option>`).join('')}
+          <option value="end">月末</option>
+        </select>
+      </div>
+      <div class="field"><label>月々の返済額（円）</label><input type="number" id="m-repay" min="0"></div>
+      <div class="field"><label>次回返済日</label><input type="date" id="m-next-date"></div>
+    </div>
+    <div class="field"><label>メモ（任意）</label><input type="text" id="m-memo"></div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">キャンセル</button>
+      <button class="primary" onclick="saveLoan()">保存する</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const SUPABASE_URL='https://ihxdxrjfteeqychvwjhe.supabase.co';
 const SUPABASE_KEY='sb_publishable_nyqrhoVoZtDuaFVXq6VMKg_vbDonqZM';
-
 const CATS={spread:{label:'スプレッド・手数料',badge:'badge-teal',anbun:false},info:{label:'情報サービス・ツール代',badge:'badge-blue',anbun:false},book:{label:'書籍・教材費',badge:'badge-amber',anbun:false},comm:{label:'通信費・PC代',badge:'badge-gray',anbun:false},seminar:{label:'セミナー・勉強会費',badge:'badge-purple',anbun:false},rent:{label:'家賃（按分）',badge:'badge-coral',anbun:'rent'},util:{label:'通信費（按分）',badge:'badge-coral',anbun:'comm'},other:{label:'その他',badge:'badge-gray',anbun:false}};
 const PAYS={card:'カード',bank:'銀行振込',cash:'現金',other:'その他'};
 const MONTHS=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 
-let expenses=[], loans=[], rentRate=30, commRate=50, monthlyPL={}, taxYear=new Date().getFullYear();
+let expenses=[],loans=[],rentRate=30,commRate=50,monthlyPL={},taxYear=new Date().getFullYear();
 
 async function sb(path,method='GET',body=null){
   const opts={method,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'}};
-  if(body) opts.body=JSON.stringify(body);
+  if(body)opts.body=JSON.stringify(body);
   const res=await fetch(SUPABASE_URL+'/rest/v1/'+path,opts);
-  if(!res.ok) throw new Error(await res.text());
+  if(!res.ok)throw new Error(await res.text());
   const text=await res.text();
   return text?JSON.parse(text):[];
 }
@@ -317,7 +343,7 @@ async function loadAll(){
       sb('expenses?order=date.desc'),
       sb('monthly_pl'),
       sb('anbun_settings'),
-      sb('loans?order=created_at.desc')
+      sb('loans?order=next_repay_date.asc.nullslast')
     ]);
     expenses=exp;
     monthlyPL={};
@@ -325,16 +351,15 @@ async function loadAll(){
     settings.forEach(s=>{if(s.key==='rent_rate')rentRate=s.value;if(s.key==='comm_rate')commRate=s.value});
     loans=ln;
     setSync('✓ 同期済み');
-  }catch(e){
-    setSync('⚠ オフライン');
-    console.error(e);
-  }
+  }catch(e){setSync('⚠ オフライン');console.error(e)}
 }
 
 function getAnbunRate(cat){if(cat==='rent')return rentRate/100;if(cat==='util')return commRate/100;return 1}
 function getAnbunAmount(exp){return Math.round(exp.amount*getAnbunRate(exp.cat))}
 function fmt(n){return '¥'+Math.abs(Math.round(n)).toLocaleString('ja-JP')}
 function fmtSigned(n){if(n===0)return '¥0';return(n>0?'+':'−')+'¥'+Math.abs(Math.round(n)).toLocaleString('ja-JP')}
+function fmtDate(d){if(!d)return '';const p=d.split('-');return p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日'}
+function daysUntil(d){if(!d)return null;const diff=new Date(d)-new Date(new Date().toISOString().slice(0,10));return Math.round(diff/86400000)}
 
 function showTab(t){
   ['dashboard','entry','anbun','list','tax','loans'].forEach(id=>{document.getElementById('tab-'+id).style.display=id===t?'':'none'});
@@ -347,7 +372,7 @@ function showTab(t){
 }
 
 function setTodayDate(){const d=document.getElementById('e-date');if(!d.value){const n=new Date;d.value=n.toISOString().slice(0,10)}}
-function updateAnbunPreview(){const cat=document.getElementById('e-cat').value;const amt=parseInt(document.getElementById('e-amount').value)||0;const el=document.getElementById('anbun-preview');if(CATS[cat].anbun&&amt>0){const r=getAnbunRate(cat);el.textContent='按分計算: '+fmt(amt)+' × '+Math.round(r*100)+'% = '+fmt(amt*r)+' が経費計上額';el.style.display='block'}else{el.textContent='';el.style.display='none'}}
+function updateAnbunPreview(){const cat=document.getElementById('e-cat').value,amt=parseInt(document.getElementById('e-amount').value)||0,el=document.getElementById('anbun-preview');if(CATS[cat].anbun&&amt>0){const r=getAnbunRate(cat);el.textContent='按分計算: '+fmt(amt)+' × '+Math.round(r*100)+'% = '+fmt(amt*r)+' が経費計上額';el.style.display='block'}else{el.textContent='';el.style.display='none'}}
 
 async function addExpense(){
   const date=document.getElementById('e-date').value,cat=document.getElementById('e-cat').value,memo=document.getElementById('e-memo').value.trim(),amount=parseInt(document.getElementById('e-amount').value)||0,pay=document.getElementById('e-pay').value,receipt=document.getElementById('e-receipt').value.trim();
@@ -364,14 +389,16 @@ async function deleteExpense(id){
 
 // 借入
 async function addLoan(){
-  const name=document.getElementById('l-name').value.trim(),amount=parseInt(document.getElementById('l-amount').value)||0,day=document.getElementById('l-day').value,repay=parseInt(document.getElementById('l-repay').value)||0,memo=document.getElementById('l-memo').value.trim();
+  const name=document.getElementById('l-name').value.trim(),amount=parseInt(document.getElementById('l-amount').value)||0,day=document.getElementById('l-day').value,repay=parseInt(document.getElementById('l-repay').value)||0,nextDate=document.getElementById('l-next-date').value,memo=document.getElementById('l-memo').value.trim();
   if(!name||amount<=0||!day||repay<=0){alert('会社名・借入額・返済日・返済額を入力してください');return}
   try{
     setSync('保存中...');
-    const res=await sb('loans','POST',{name,amount,repay_day:day,repay_amount:repay,memo:memo||null});
+    const res=await sb('loans','POST',{name,amount,repay_day:day,repay_amount:repay,next_repay_date:nextDate||null,memo:memo||null});
     loans.unshift(res[0]);
+    loans.sort((a,b)=>{if(!a.next_repay_date&&!b.next_repay_date)return 0;if(!a.next_repay_date)return 1;if(!b.next_repay_date)return -1;return a.next_repay_date.localeCompare(b.next_repay_date)});
     setSync('✓ 同期済み');
-    document.getElementById('l-name').value='';document.getElementById('l-amount').value='';document.getElementById('l-day').value='';document.getElementById('l-repay').value='';document.getElementById('l-memo').value='';
+    ['l-name','l-amount','l-repay','l-next-date','l-memo'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('l-day').value='';
     renderLoans();renderDashboard();
   }catch(e){setSync('⚠ 保存失敗');alert('保存に失敗しました: '+e.message)}
 }
@@ -382,96 +409,114 @@ async function deleteLoan(id){
   catch(e){setSync('⚠ 削除失敗')}
 }
 
+function openEditModal(id){
+  const l=loans.find(l=>l.id===id);if(!l)return;
+  document.getElementById('m-id').value=l.id;
+  document.getElementById('m-name').value=l.name;
+  document.getElementById('m-amount').value=l.amount;
+  document.getElementById('m-day').value=l.repay_day||'';
+  document.getElementById('m-repay').value=l.repay_amount;
+  document.getElementById('m-next-date').value=l.next_repay_date||'';
+  document.getElementById('m-memo').value=l.memo||'';
+  document.getElementById('loan-modal').classList.add('open');
+}
+
+function closeModal(){document.getElementById('loan-modal').classList.remove('open')}
+
+async function saveLoan(){
+  const id=parseInt(document.getElementById('m-id').value);
+  const name=document.getElementById('m-name').value.trim(),amount=parseInt(document.getElementById('m-amount').value)||0,day=document.getElementById('m-day').value,repay=parseInt(document.getElementById('m-repay').value)||0,nextDate=document.getElementById('m-next-date').value,memo=document.getElementById('m-memo').value.trim();
+  if(!name||amount<=0||!day||repay<=0){alert('会社名・借入額・返済日・返済額を入力してください');return}
+  try{
+    setSync('保存中...');
+    const res=await sb('loans?id=eq.'+id,'PATCH',{name,amount,repay_day:day,repay_amount:repay,next_repay_date:nextDate||null,memo:memo||null});
+    const idx=loans.findIndex(l=>l.id===id);
+    if(idx>=0)loans[idx]=res[0];
+    loans.sort((a,b)=>{if(!a.next_repay_date&&!b.next_repay_date)return 0;if(!a.next_repay_date)return 1;if(!b.next_repay_date)return -1;return a.next_repay_date.localeCompare(b.next_repay_date)});
+    setSync('✓ 同期済み');
+    closeModal();renderLoans();renderDashboard();
+  }catch(e){setSync('⚠ 保存失敗');alert('保存に失敗しました: '+e.message)}
+}
+
+function loanCardHTML(l,showActions=true){
+  const days=daysUntil(l.next_repay_date);
+  let dateLabel='';
+  if(l.next_repay_date){
+    const color=days<=7?'#A32D2D':days<=14?'#854F0B':'#0F6E56';
+    const urgency=days===0?'今日！':days<0?`${Math.abs(days)}日超過`:`あと${days}日`;
+    dateLabel=`<span style="display:inline-block;background:${days<=7?'#FCEBEB':days<=14?'#FAEEDA':'#E1F5EE'};color:${color};font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-left:6px">${urgency}</span>`;
+  }
+  return `<div class="loan-card">
+    <div class="loan-header">
+      <div>
+        <div class="loan-name">${l.name}</div>
+        <div style="margin-top:4px">
+          <span style="font-size:12px;color:#888">毎月${l.repay_day==='end'?'月末':l.repay_day+'日'}払い</span>
+          ${l.next_repay_date?`<span style="font-size:12px;color:#555;margin-left:8px">次回 ${fmtDate(l.next_repay_date)}</span>${dateLabel}`:''}
+        </div>
+      </div>
+      ${showActions?`<div class="loan-actions"><button class="edit-btn" onclick="openEditModal(${l.id})">編集</button><button class="danger" onclick="deleteLoan(${l.id})">削除</button></div>`:''}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px">
+      <div><div style="font-size:11px;color:#888;margin-bottom:2px">借入額</div><div class="loan-amount-big">${fmt(l.amount)}</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:#888;margin-bottom:2px">月々の返済</div><div style="font-size:15px;font-weight:500">${fmt(l.repay_amount)}</div></div>
+    </div>
+    ${l.memo?`<div style="font-size:12px;color:#aaa;margin-top:8px;padding-top:8px;border-top:1px solid #f0eeea">${l.memo}</div>`:''}
+  </div>`;
+}
+
 function renderLoans(){
   const el=document.getElementById('loan-list');
-  if(loans.length===0){el.innerHTML='<p class="empty">借入なし</p>';document.getElementById('loan-totals').innerHTML='';return}
-  el.innerHTML=loans.map(l=>`
-    <div class="loan-row">
-      <div style="flex:1">
-        <div class="loan-name">${l.name}</div>
-        <div class="loan-detail">返済日：毎月${l.repay_day==='end'?'月末':l.repay_day+'日'}${l.memo?'　'+l.memo:''}</div>
-      </div>
-      <div class="loan-amount">
-        <div class="principal">${fmt(l.amount)}</div>
-        <div class="repay">月々 ${fmt(l.repay_amount)}</div>
-      </div>
-      <button class="danger" onclick="deleteLoan(${l.id})" style="margin-left:8px;align-self:center">削除</button>
-    </div>`).join('');
-  const totalPrincipal=loans.reduce((s,l)=>s+l.amount,0);
-  const totalRepay=loans.reduce((s,l)=>s+l.repay_amount,0);
-  document.getElementById('loan-totals').innerHTML=`
-    <div class="summary-row"><span>借入件数</span><span>${loans.length}件</span></div>
-    <div class="summary-row"><span>借入総額</span><span style="color:#A32D2D;font-weight:500">${fmt(totalPrincipal)}</span></div>
-    <div class="summary-row total"><span>月間返済合計</span><span>${fmt(totalRepay)}</span></div>`;
+  if(loans.length===0){el.innerHTML='<p class="empty">借入なし</p>';document.getElementById('loan-totals').style.display='none';return}
+  el.innerHTML=loans.map(l=>loanCardHTML(l,true)).join('');
+  const totalPrincipal=loans.reduce((s,l)=>s+l.amount,0),totalRepay=loans.reduce((s,l)=>s+l.repay_amount,0);
+  const totEl=document.getElementById('loan-totals');
+  totEl.style.display='block';
+  totEl.innerHTML=`<div class="summary-row"><span>借入件数</span><span>${loans.length}件</span></div><div class="summary-row"><span>借入総額</span><span style="color:#A32D2D;font-weight:500">${fmt(totalPrincipal)}</span></div><div class="summary-row total"><span>月間返済合計</span><span>${fmt(totalRepay)}</span></div>`;
 }
 
 function getDashTax(){
   const fxExpense=expenses.reduce((s,e)=>s+getAnbunAmount(e),0);
-  let yearTotal=0;
-  let hasData=false;
-  for(let m=0;m<12;m++){
-    const key=taxYear+'-'+(m+1);
-    if(monthlyPL[key]!==undefined){yearTotal+=parseFloat(monthlyPL[key]);hasData=true}
-  }
+  let yearTotal=0,hasData=false;
+  for(let m=0;m<12;m++){const key=taxYear+'-'+(m+1);if(monthlyPL[key]!==undefined){yearTotal+=parseFloat(monthlyPL[key]);hasData=true}}
   if(!hasData)return null;
   const fxNet=yearTotal-fxExpense;
-  if(fxNet<=0)return{pl:yearTotal,tax:0,after:fxNet,net:fxNet};
+  if(fxNet<=0)return{pl:yearTotal,tax:0,after:fxNet};
   const tax=Math.round(fxNet*0.20315);
-  return{pl:yearTotal,tax,after:fxNet-tax,net:fxNet};
+  return{pl:yearTotal,tax,after:fxNet-tax};
 }
 
 function renderDashboard(){
-  const total=expenses.reduce((s,e)=>s+e.amount,0);
-  const totalAnbun=expenses.reduce((s,e)=>s+getAnbunAmount(e),0);
+  const total=expenses.reduce((s,e)=>s+e.amount,0),totalAnbun=expenses.reduce((s,e)=>s+getAnbunAmount(e),0);
   document.getElementById('total-all').textContent=fmt(total);
   document.getElementById('total-anbun').textContent=fmt(totalAnbun);
   document.getElementById('total-count').textContent=expenses.length+'件';
-
-  // 損益・税額
   document.getElementById('dash-year').textContent=taxYear;
   const t=getDashTax();
   if(t){
-    const plEl=document.getElementById('dash-pl');
-    plEl.textContent=fmtSigned(t.pl);
-    plEl.style.color=t.pl>=0?'#0F6E56':'#A32D2D';
+    const plEl=document.getElementById('dash-pl');plEl.textContent=fmtSigned(t.pl);plEl.style.color=t.pl>=0?'#0F6E56':'#A32D2D';
     document.getElementById('dash-tax').textContent=t.tax>0?fmt(t.tax):'なし';
-    const afterEl=document.getElementById('dash-after');
-    afterEl.textContent=fmtSigned(t.after);
-    afterEl.style.color=t.after>=0?'#0F6E56':'#A32D2D';
-  }else{
-    document.getElementById('dash-pl').textContent='未入力';
-    document.getElementById('dash-tax').textContent='—';
-    document.getElementById('dash-after').textContent='—';
-  }
-
-  // 借入
-  const totalPrincipal=loans.reduce((s,l)=>s+l.amount,0);
-  const totalRepay=loans.reduce((s,l)=>s+l.repay_amount,0);
+    const afterEl=document.getElementById('dash-after');afterEl.textContent=fmtSigned(t.after);afterEl.style.color=t.after>=0?'#0F6E56':'#A32D2D';
+  }else{document.getElementById('dash-pl').textContent='未入力';document.getElementById('dash-tax').textContent='—';document.getElementById('dash-after').textContent='—'}
+  const totalPrincipal=loans.reduce((s,l)=>s+l.amount,0),totalRepay=loans.reduce((s,l)=>s+l.repay_amount,0);
   document.getElementById('dash-loan-total').textContent=fmt(totalPrincipal);
   document.getElementById('dash-loan-monthly').textContent=fmt(totalRepay);
   const dll=document.getElementById('dash-loan-list');
   if(loans.length===0){dll.innerHTML='<p class="empty">借入なし</p>'}
-  else{dll.innerHTML=loans.map(l=>`
-    <div class="loan-row">
-      <div style="flex:1"><div class="loan-name">${l.name}</div><div class="loan-detail">毎月${l.repay_day==='end'?'月末':l.repay_day+'日'}返済</div></div>
-      <div class="loan-amount"><div class="principal">${fmt(l.amount)}</div><div class="repay">月々 ${fmt(l.repay_amount)}</div></div>
-    </div>`).join('')}
-
-  // カテゴリ別
+  else{dll.innerHTML=loans.map(l=>loanCardHTML(l,false)).join('')}
   const catMap={};
   expenses.forEach(e=>{if(!catMap[e.cat])catMap[e.cat]={total:0,anbun:0,count:0};catMap[e.cat].total+=e.amount;catMap[e.cat].anbun+=getAnbunAmount(e);catMap[e.cat].count++});
   const cs=document.getElementById('cat-summary');
   if(Object.keys(catMap).length===0){cs.innerHTML='<p class="empty">まだ経費がありません</p>'}
   else{cs.innerHTML=Object.entries(catMap).map(([k,v])=>`<div class="summary-row"><div style="display:flex;align-items:center;gap:8px"><span class="badge ${CATS[k].badge}">${CATS[k].label}</span><span style="font-size:12px;color:#aaa">${v.count}件</span></div><div style="text-align:right"><span>${fmt(v.total)}</span>${CATS[k].anbun?`<span style="font-size:12px;color:#aaa;margin-left:6px">→ 按分後 ${fmt(v.anbun)}</span>`:''}</div></div>`).join('')+`<div class="summary-row total"><span>合計（按分後）</span><span>${fmt(totalAnbun)}</span></div>`}
-
-  const recent=expenses.slice(0,5);
   const rl=document.getElementById('recent-list');
+  const recent=expenses.slice(0,5);
   if(recent.length===0){rl.innerHTML='<p class="empty">まだ経費がありません</p>'}
   else{rl.innerHTML=recent.map(e=>`<div class="summary-row"><div><span style="font-size:12px;color:#aaa;margin-right:8px">${e.date}</span><span class="badge ${CATS[e.cat].badge}">${CATS[e.cat].label}</span><span style="font-size:14px;margin-left:8px">${e.memo}</span></div><span style="font-weight:500">${fmt(e.amount)}</span></div>`).join('')}
 }
 
 function renderList(){
-  const filter=document.getElementById('filter-cat').value;const filtered=filter?expenses.filter(e=>e.cat===filter):expenses;const tbody=document.getElementById('expense-tbody');
+  const filter=document.getElementById('filter-cat').value,filtered=filter?expenses.filter(e=>e.cat===filter):expenses,tbody=document.getElementById('expense-tbody');
   if(filtered.length===0){tbody.innerHTML='<tr><td colspan="7" class="empty">データがありません</td></tr>';document.getElementById('list-totals').innerHTML='';return}
   tbody.innerHTML=filtered.map(e=>`<tr><td style="white-space:nowrap">${e.date}</td><td><span class="badge ${CATS[e.cat].badge}">${CATS[e.cat].label}</span></td><td>${e.memo}${e.receipt?`<span style="font-size:11px;color:#aaa;margin-left:6px">${e.receipt}</span>`:''}</td><td style="text-align:right">${fmt(e.amount)}</td><td style="text-align:right">${CATS[e.cat].anbun?`<span style="color:#0F6E56">${fmt(getAnbunAmount(e))}</span>`:fmt(e.amount)}</td><td>${PAYS[e.pay]||e.pay}</td><td><button class="danger" onclick="deleteExpense(${e.id})">削除</button></td></tr>`).join('');
   const total=filtered.reduce((s,e)=>s+e.amount,0),anbun=filtered.reduce((s,e)=>s+getAnbunAmount(e),0);
@@ -510,15 +555,8 @@ async function onMonthInput(m,val){
   calcTax();renderDashboard();
   clearTimeout(cell._timer);
   cell._timer=setTimeout(async()=>{
-    try{
-      setSync('保存中...');
-      if(num===null){await sb('monthly_pl?year=eq.'+taxYear+'&month=eq.'+(m+1),'DELETE')}
-      else{await sb('monthly_pl','POST',{year:taxYear,month:m+1,amount:num})}
-      setSync('✓ 同期済み');
-    }catch(e){
-      try{await sb('monthly_pl?year=eq.'+taxYear+'&month=eq.'+(m+1),'PATCH',{amount:num});setSync('✓ 同期済み')}
-      catch(e2){setSync('⚠ 保存失敗')}
-    }
+    try{setSync('保存中...');if(num===null){await sb('monthly_pl?year=eq.'+taxYear+'&month=eq.'+(m+1),'DELETE')}else{await sb('monthly_pl','POST',{year:taxYear,month:m+1,amount:num})}setSync('✓ 同期済み')}
+    catch(e){try{await sb('monthly_pl?year=eq.'+taxYear+'&month=eq.'+(m+1),'PATCH',{amount:num});setSync('✓ 同期済み')}catch(e2){setSync('⚠ 保存失敗')}}
   },800);
 }
 
@@ -526,8 +564,7 @@ function renderTaxTab(){
   document.getElementById('tax-year-label').textContent=taxYear+'年';
   document.getElementById('month-grid').innerHTML=MONTHS.map((mn,i)=>{
     const val=getMonthVal(taxYear,i),has=hasMonthVal(taxYear,i),cls='month-cell'+(val>0?' positive':val<0?' negative':'');
-    const subText=has&&val!==0?(val>0?'▲ 利益':'▼ 損失'):'',subColor=val>0?'#0F6E56':'#A32D2D';
-    return `<div class="${cls}" id="mc-${i}"><label>${mn}</label><input type="number" value="${has?val:''}" placeholder="0" oninput="onMonthInput(${i},this.value)" style="text-align:right"><div class="month-sub" id="ms-${i}" style="color:${subColor}">${subText}</div></div>`
+    return `<div class="${cls}" id="mc-${i}"><label>${mn}</label><input type="number" value="${has?val:''}" placeholder="0" oninput="onMonthInput(${i},this.value)" style="text-align:right"><div class="month-sub" id="ms-${i}" style="color:${val>0?'#0F6E56':'#A32D2D'}">${has&&val!==0?(val>0?'▲ 利益':'▼ 損失'):''}</div></div>`
   }).join('');
   calcTax();
 }
@@ -535,11 +572,7 @@ function renderTaxTab(){
 function calcTax(){
   const fxExpense=expenses.reduce((s,e)=>s+getAnbunAmount(e),0);
   let yearTotal=0;
-  const monthRows=MONTHS.map((mn,i)=>{
-    if(!hasMonthVal(taxYear,i))return null;
-    const v=getMonthVal(taxYear,i);yearTotal+=v;
-    return `<div class="summary-row"><span style="color:#888">${mn}</span><span style="color:${v>=0?'#0F6E56':'#A32D2D'}">${fmtSigned(v)}</span></div>`;
-  }).filter(Boolean);
+  const monthRows=MONTHS.map((mn,i)=>{if(!hasMonthVal(taxYear,i))return null;const v=getMonthVal(taxYear,i);yearTotal+=v;return `<div class="summary-row"><span style="color:#888">${mn}</span><span style="color:${v>=0?'#0F6E56':'#A32D2D'}">${fmtSigned(v)}</span></div>`}).filter(Boolean);
   const res=document.getElementById('tax-result');
   if(monthRows.length===0){res.innerHTML='<p class="empty" style="padding:1rem 0">月別損益を入力してください</p>';return}
   const fxNet=yearTotal-fxExpense;
@@ -547,8 +580,8 @@ function calcTax(){
   if(fxNet<=0){
     resultHTML=`<div style="background:#FCEBEB;border-radius:10px;padding:16px 20px;margin-bottom:10px"><div style="font-size:13px;color:#A32D2D;margin-bottom:8px;font-weight:500">課税所得なし（損失 or 経費で相殺）</div><div class="tax-row"><span>年間損益合計</span><span style="color:${yearTotal>=0?'#0F6E56':'#A32D2D'}">${fmtSigned(yearTotal)}</span></div><div class="tax-row"><span>− FX経費（按分後）</span><span>− ${fmt(fxExpense)}</span></div><div class="tax-row" style="font-weight:500;border-top:1px solid #F0BBBB;margin-top:4px;padding-top:10px"><span>課税所得</span><span style="color:#A32D2D">${fmt(fxNet)}</span></div></div><p class="note">損失は翌年以降3年間の繰り越し控除が可能です（確定申告が必要）。</p>`;
   }else{
-    const incomeTax=Math.round(fxNet*0.15),fukkouTax=Math.round(fxNet*0.00315),residentTax=Math.round(fxNet*0.05),totalTax=Math.round(fxNet*0.20315),afterTax=fxNet-totalTax;
-    resultHTML=`<div class="card"><div class="rate-badge">申告分離課税 一律 20.315%</div><div class="tax-row"><span>年間損益合計</span><span style="color:#0F6E56">${fmtSigned(yearTotal)}</span></div><div class="tax-row indent"><span>− FX経費（按分後）</span><span>− ${fmt(fxExpense)}</span></div><div class="tax-row" style="font-weight:500"><span>課税所得</span><span>${fmt(fxNet)}</span></div><div class="divider"></div><div class="tax-row"><span>所得税（15%）</span><span>${fmt(incomeTax)}</span></div><div class="tax-row"><span>復興特別所得税（0.315%）</span><span>${fmt(fukkouTax)}</span></div><div class="tax-row"><span>住民税（5%）</span><span>${fmt(residentTax)}</span></div><div class="tax-row total"><span>納税額合計</span><span style="color:#A32D2D">${fmt(totalTax)}</span></div><div style="margin-top:14px;padding:12px 16px;background:#f7f6f3;border-radius:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#666">税引後の手残り</span><span style="font-size:18px;font-weight:500;color:#0F6E56">${fmt(afterTax)}</span></div></div><p class="note">※ 住民税は翌年6月から徴収されます。</p>`;
+    const it=Math.round(fxNet*0.15),ft=Math.round(fxNet*0.00315),rt=Math.round(fxNet*0.05),tt=Math.round(fxNet*0.20315),at=fxNet-tt;
+    resultHTML=`<div class="card"><div class="rate-badge">申告分離課税 一律 20.315%</div><div class="tax-row"><span>年間損益合計</span><span style="color:#0F6E56">${fmtSigned(yearTotal)}</span></div><div class="tax-row indent"><span>− FX経費（按分後）</span><span>− ${fmt(fxExpense)}</span></div><div class="tax-row" style="font-weight:500"><span>課税所得</span><span>${fmt(fxNet)}</span></div><div class="divider"></div><div class="tax-row"><span>所得税（15%）</span><span>${fmt(it)}</span></div><div class="tax-row"><span>復興特別所得税（0.315%）</span><span>${fmt(ft)}</span></div><div class="tax-row"><span>住民税（5%）</span><span>${fmt(rt)}</span></div><div class="tax-row total"><span>納税額合計</span><span style="color:#A32D2D">${fmt(tt)}</span></div><div style="margin-top:14px;padding:12px 16px;background:#f7f6f3;border-radius:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#666">税引後の手残り</span><span style="font-size:18px;font-weight:500;color:#0F6E56">${fmt(at)}</span></div></div><p class="note">※ 住民税は翌年6月から徴収されます。</p>`;
   }
   res.innerHTML=`<div class="card" style="margin-bottom:12px"><p class="section-title" style="margin-bottom:10px">${taxYear}年 月別集計</p>${monthRows.join('')}<div class="summary-row total"><span>年間合計</span><span style="color:${yearTotal>=0?'#0F6E56':'#A32D2D'}">${fmtSigned(yearTotal)}</span></div></div>${resultHTML}`;
 }
@@ -559,6 +592,9 @@ function exportCSV(){
   const csv='\uFEFF'+header+'\n'+rows.join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='FX経費_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url)
 }
+
+// モーダル外クリックで閉じる
+document.getElementById('loan-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 
 setTodayDate();
 loadAll().then(()=>renderDashboard());
